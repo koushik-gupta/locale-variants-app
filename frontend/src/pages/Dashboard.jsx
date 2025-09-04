@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom'; // <-- NEW: Import Link for navigation
 
-// Import the new components we just added
+// Import the UI components
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,8 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-// Import the Table components from before
 import {
   Table,
   TableBody,
@@ -69,23 +68,21 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-8 max-w-4xl mx-auto"> {/* Centered layout */}
+    <div className="p-8 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold">Variant Manager</h1> {/* Made title bigger */}
+        <h1 className="text-3xl font-bold">Variant Manager</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>Create New Group</Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              {/* Added styling to Title and Description */}
               <DialogTitle className="text-xl">Create Variant Group</DialogTitle>
               <DialogDescription className="text-base">
                 Enter a name for your new variant group (e.g., "Region - Americas").
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              {/* Improved layout for the form field */}
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
                   Name
@@ -106,7 +103,6 @@ export default function Dashboard() {
         </Dialog>
       </div>
 
-      {/* Added a Card-like border to the table for a cleaner look */}
       <div className="border rounded-lg">
         <Table>
           <TableCaption>A list of your configured variant groups.</TableCaption>
@@ -114,7 +110,7 @@ export default function Dashboard() {
             <TableRow>
               <TableHead className="w-[100px]">ID</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead className="text-right">Created At</TableHead> {/* Aligned text */}
+              <TableHead className="text-right">Created At</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -134,8 +130,16 @@ export default function Dashboard() {
               variantGroups.map((group) => (
                 <TableRow key={group.id}>
                   <TableCell className="font-medium">{group.id}</TableCell>
-                  <TableCell>{group.name}</TableCell>
-                  <TableCell className="text-right">{new Date(group.created_at).toLocaleString()}</TableCell> {/* Aligned text */}
+                  {/* 👇 NEW: This now a clickable link */}
+                  <TableCell>
+                    <Link 
+                      to={`/group/${group.id}`} 
+                      className="font-medium text-primary underline-offset-4 hover:underline"
+                    >
+                      {group.name}
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-right">{new Date(group.created_at).toLocaleString()}</TableCell>
                 </TableRow>
               ))
             )}
