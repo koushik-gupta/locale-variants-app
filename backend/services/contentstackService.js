@@ -1,30 +1,35 @@
 const contentstack = require("contentstack");
 
-// Log the environment variables to make SURE they are loaded correctly
-console.log("--- Contentstack Service Initializing ---");
-console.log("API Key:", process.env.CONTENTSTACK_API_KEY ? "Loaded" : "MISSING!");
-console.log("Delivery Token:", process.env.CONTENTSTACK_DELIVERY_TOKEN ? "Loaded" : "MISSING!");
-console.log("Environment:", process.env.CONTENTSTACK_ENVIRONMENT);
-console.log("---------------------------------------");
-
-const Stack = contentstack.Stack({
-  api_key: process.env.CONTENTSTACK_API_KEY,
-  delivery_token: process.env.CONTENTSTACK_DELIVERY_TOKEN,
+// This is the modern (v4) way to initialize the SDK
+const client = new contentstack.Client({
+  // The Stack API Key (notice it's apiKey, not api_key)
+  apiKey: process.env.CONTENTSTACK_API_KEY,
+  // The Delivery Token for the environment
+  deliveryToken: process.env.CONTENTSTACK_DELIVERY_TOKEN,
+  // The environment name
   environment: process.env.CONTENTSTACK_ENVIRONMENT,
+  // The region for your Stack
   region: "eu",
-  host: "eu-cdn.contentstack.com"
+  // The host override we discovered
+  host: "eu-cdn.contentstack.com",
 });
 
+/**
+ * A function to fetch a single entry using the modern SDK.
+ */
 async function fetchEntry(contentType, entryUid) {
-  console.log(`Attempting to fetch entry: [Type: ${contentType}, UID: ${entryUid}]`);
   try {
-    const entry = await Stack.ContentType(contentType).Entry(entryUid).fetch();
-    console.log("SDK Fetch successful. Entry found.");
-    return entry.toJSON();
+    const entry = await client
+      .stack()
+      .contentType(contentType)
+      .entry(entryUid)
+      .fetch();
+    
+    // The new SDK returns a clean object, no need for .toJSON()
+    return entry;
   } catch (error) {
-    // This is the most important log. It will print the full error from the SDK.
-    console.error("!!! SDK FETCH FAILED !!!");
-    console.error(error);
+    // Log the error to see details if it fails
+    console.error(`!!! SDK V4 FETCH FAILED !!! for ${entryUid}`, error);
     return null;
   }
 }
