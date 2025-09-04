@@ -6,9 +6,11 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Routes will be added later
-// app.use("/api/locales", require("./routes/locales"));
-// app.use("/api/variants", require("./routes/variants"));
+// Add the new line for variants
+app.use("/api/locales", require("./routes/locales"));
+app.use("/api/variants", require("./routes/variants")); // This is the new line [cite: 98]
+
+// We will add this one later
 // app.use("/api/translations", require("./routes/translations"));
 
 const PORT = process.env.PORT || 5000;
