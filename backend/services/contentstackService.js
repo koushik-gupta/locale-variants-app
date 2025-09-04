@@ -1,7 +1,12 @@
 const contentstack = require("contentstack");
 
-// This initializes the connection to your Contentstack Stack
-// It uses the environment variables you already set up in Railway
+// Log the environment variables to make SURE they are loaded correctly
+console.log("--- Contentstack Service Initializing ---");
+console.log("API Key:", process.env.CONTENTSTACK_API_KEY ? "Loaded" : "MISSING!");
+console.log("Delivery Token:", process.env.CONTENTSTACK_DELIVERY_TOKEN ? "Loaded" : "MISSING!");
+console.log("Environment:", process.env.CONTENTSTACK_ENVIRONMENT);
+console.log("---------------------------------------");
+
 const Stack = contentstack.Stack({
   api_key: process.env.CONTENTSTACK_API_KEY,
   delivery_token: process.env.CONTENTSTACK_DELIVERY_TOKEN,
@@ -10,21 +15,18 @@ const Stack = contentstack.Stack({
   host: "eu-cdn.contentstack.com"
 });
 
-/**
- * A function to fetch a single entry from a specific content type.
- * @param {string} contentType - The API key of the content type.
- * @param {string} entryUid - The UID of the entry to fetch.
- * @returns {Promise<object|null>} The entry object or null if not found.
- */
 async function fetchEntry(contentType, entryUid) {
+  console.log(`Attempting to fetch entry: [Type: ${contentType}, UID: ${entryUid}]`);
   try {
     const entry = await Stack.ContentType(contentType).Entry(entryUid).fetch();
-    return entry.toJSON(); // .toJSON() gives us a clean JavaScript object
+    console.log("SDK Fetch successful. Entry found.");
+    return entry.toJSON();
   } catch (error) {
-    console.error(`Error fetching entry ${entryUid} from ${contentType}:`, error);
-    return null; // Return null if there's an error (e.g., entry not found)
+    // This is the most important log. It will print the full error from the SDK.
+    console.error("!!! SDK FETCH FAILED !!!");
+    console.error(error);
+    return null;
   }
 }
 
-// We will add more functions here later
 module.exports = { fetchEntry };
