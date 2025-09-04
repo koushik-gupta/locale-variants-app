@@ -1,7 +1,7 @@
 const contentstack = require("contentstack");
 
-// The corrected syntax: Using "new" with the original "Stack" class
-const Stack = new contentstack.Stack({
+// This is the correct syntax for the v3 SDK, which is a function call
+const Stack = contentstack.Stack({
   api_key: process.env.CONTENTSTACK_API_KEY,
   delivery_token: process.env.CONTENTSTACK_DELIVERY_TOKEN,
   environment: process.env.CONTENTSTACK_ENVIRONMENT,
@@ -10,19 +10,19 @@ const Stack = new contentstack.Stack({
 });
 
 /**
- * A function to fetch a single entry from a specific content type.
+ * A function to fetch a single entry using the v3 SDK.
  */
 async function fetchEntry(contentType, entryUid) {
   try {
-    // This is the correct way to fetch using the "Stack" object
+    // The v3 SDK uses a builder pattern that ends with .fetch()
     const entry = await Stack.ContentType(contentType)
       .Entry(entryUid)
+      .toJSON() // Add .toJSON() before .fetch() for a clean object
       .fetch();
-    
-    // Use .toJSON() to get a clean object with this version
-    return entry.toJSON();
+
+    return entry;
   } catch (error) {
-    console.error(`!!! SDK FETCH FAILED !!! for ${entryUid}`, error);
+    console.error(`!!! SDK V3 FETCH FAILED !!! for ${entryUid}`, error);
     return null;
   }
 }
