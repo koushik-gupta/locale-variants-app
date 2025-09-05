@@ -22,7 +22,7 @@ export default function SidebarExtension() {
         const contentType = sdk.contentType.uid;
         const variantGroupId = 1; // We are hardcoding this
 
-        const apiUrl = `${API_BASE_URL}/api/translations/${variantGroupId}/${entry.uid}?contentType=${contentType}`;
+        const apiUrl = `${API_BASE_URL}/api/translations/status?variantGroupId=${variantGroupId}&entryUid=${entry.uid}&contentType=${contentType}`;
         setDebugInfo(prev => ({ ...prev, step: 'Making API call...', url: apiUrl }));
 
         return fetch(apiUrl);

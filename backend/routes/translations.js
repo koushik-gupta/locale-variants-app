@@ -11,9 +11,14 @@ const dbConfig = {
     port: process.env.MYSQL_PORT
 };
 
-router.get("/:variantGroupId/:entryUid", async (req, res) => {
-    const { variantGroupId, entryUid } = req.params;
-    const contentType = req.query.contentType || 'page';
+// NEW - This replaces the old /:variantGroupId/:entryUid route
+router.get("/status", async (req, res) => {
+    // We get all the data from query parameters now
+    const { variantGroupId, entryUid, contentType } = req.query;
+
+    if (!variantGroupId || !entryUid || !contentType) {
+        return res.status(400).json({ error: "variantGroupId, entryUid, and contentType are required." });
+    }
 
     try {
         const conn = await mysql.createConnection(dbConfig);
@@ -32,27 +37,22 @@ router.get("/:variantGroupId/:entryUid", async (req, res) => {
             return res.status(404).json({ error: "Entry not found in Contentstack." });
         }
 
-        // --- THIS IS THE FIX ---
-        // We now safely check if entry.publish_details is an array before using it.
         let publishedLocales = new Set();
         if (Array.isArray(entry.publish_details)) {
             publishedLocales = new Set(entry.publish_details.map(detail => detail.locale));
         } else if (entry.locale) {
-            // If publish_details doesn't exist, we can fall back to the entry's own locale.
             publishedLocales.add(entry.locale);
         }
-        // --- END OF FIX ---
 
         const translationStatus = requiredLocales.map(locale => ({
             id: locale.id,
             name: locale.name,
             status: publishedLocales.has(locale.name) ? 'Translated' : 'Missing'
         }));
-
+        
         res.json(translationStatus);
 
     } catch (err) {
-        console.error("Crash in translation status endpoint:", err);
         res.status(500).json({ error: err.message });
     }
 });
