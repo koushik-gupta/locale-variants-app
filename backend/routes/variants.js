@@ -1,47 +1,50 @@
 const express = require("express");
 const router = express.Router();
-const mysql = require("mysql2/promise");
+const axios = require("axios");
 
-// Database configuration, same as before
-const dbConfig = {
-    host: process.env.MYSQL_HOST,
-    user: process.env.MYSQL_USER,
-    password: process.env.MYSQL_PASSWORD,
-    database: process.env.MYSQL_DB,
-};
+// --- Contentstack API Configuration ---
+const API_KEY = process.env.CONTENTSTACK_API_KEY;
+const MANAGEMENT_TOKEN = process.env.CONTENTSTACK_MANAGEMENT_TOKEN;
+const API_HOST = "https://eu-api.contentstack.com/v3"; // EU Region Host
 
-// GET endpoint to fetch all variant groups
+const axiosClient = axios.create({
+  baseURL: API_HOST,
+  headers: {
+    api_key: API_KEY,
+    authorization: MANAGEMENT_TOKEN,
+    'Content-Type': 'application/json'
+  }
+});
+// ------------------------------------
+
+// GET endpoint to fetch all variants
 router.get("/", async (req, res) => {
-    try {
-        const conn = await mysql.createConnection(dbConfig);
-        // This query uses the 'variant_groups' table from your roadmap [cite: 58]
-        const [rows] = await conn.execute("SELECT * FROM variant_groups ORDER BY created_at DESC");
-        res.json(rows);
-        await conn.end();
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const response = await axiosClient.get('/variants');
+    res.json(response.data.variants);
+  } catch (err) {
+    console.error("Contentstack API Error:", err.response?.data);
+    res.status(500).json({ error: "Failed to fetch variants from Contentstack." });
+  }
 });
 
-// POST endpoint to create a new variant group
+// POST endpoint to create a new variant
 router.post("/", async (req, res) => {
-    // We expect the request to send a 'name' for the new group
-    const { name } = req.body;
+  const { name } = req.body;
+  if (!name) {
+    return res.status(400).json({ error: "Variant name is required." });
+  }
 
-    if (!name) {
-        return res.status(400).json({ error: "Variant group name is required." });
-    }
-
-    try {
-        const conn = await mysql.createConnection(dbConfig);
-        // This query inserts a new 'name' into the 'variant_groups' table [cite: 61]
-        const [result] = await conn.execute("INSERT INTO variant_groups (name) VALUES (?)", [name]);
-        const newGroupId = result.insertId;
-        res.status(201).json({ id: newGroupId, name: name });
-        await conn.end();
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+  try {
+    const payload = {
+      variant: { name: name }
+    };
+    const response = await axiosClient.post('/variants', payload);
+    res.status(201).json(response.data.variant);
+  } catch (err) {
+    console.error("Contentstack API Error:", err.response?.data);
+    res.status(500).json({ error: "Failed to create variant in Contentstack." });
+  }
 });
 
 module.exports = router;

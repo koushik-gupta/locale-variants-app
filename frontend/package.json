@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@contentstack/management": "^1.25.0",
     "@contentstack/ui-extensions-sdk": "^2.2.3",
     "@hookform/resolvers": "^5.2.1",
     "@radix-ui/react-dialog": "^1.1.15",
