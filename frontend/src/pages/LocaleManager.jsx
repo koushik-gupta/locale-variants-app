@@ -1,29 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import axios from 'axios';
+// No more axios import
 
 // Import UI Components
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
+// --- The Fix: We hardcode the URL here ---
+const API_BASE_URL = "https://locale-variants-app-production.up.railway.app";
 
 export default function LocaleManager() {
   const { groupId } = useParams();
@@ -31,16 +18,19 @@ export default function LocaleManager() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // New state for the form
+  // Form state
   const [newLocaleName, setNewLocaleName] = useState('');
   const [fallbackId, setFallbackId] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const fetchLocales = () => {
     setIsLoading(true);
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/locales/${groupId}`;
-    axios.get(apiUrl)
-      .then(res => setLocales(res.data))
+    fetch(`${API_BASE_URL}/api/locales/${groupId}`)
+      .then(response => {
+        if (!response.ok) throw new Error(`Network response was not ok. Status: ${response.status}`);
+        return response.json();
+      })
+      .then(data => setLocales(data))
       .catch(err => {
         console.error(`Failed to fetch locales for group ${groupId}:`, err);
         setError("Failed to load data.");
@@ -52,19 +42,25 @@ export default function LocaleManager() {
     fetchLocales();
   }, [groupId]);
 
-  // New handler function to create a locale
   const handleCreateLocale = () => {
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/locales`;
-    axios.post(apiUrl, {
-      variant_group_id: groupId,
-      name: newLocaleName,
-      fallback_to: fallbackId || null,
+    fetch(`${API_BASE_URL}/api/locales`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        variant_group_id: groupId,
+        name: newLocaleName,
+        fallback_to: fallbackId || null,
+      }),
     })
-    .then(res => {
-      setIsDialogOpen(false); // Close the dialog
-      setNewLocaleName(''); // Reset form
-      setFallbackId('');     // Reset form
-      fetchLocales();        // Refresh the table
+    .then(response => {
+      if (!response.ok) throw new Error(`Network response was not ok. Status: ${response.status}`);
+      return response.json();
+    })
+    .then(() => {
+      setIsDialogOpen(false);
+      setNewLocaleName('');
+      setFallbackId('');
+      fetchLocales();
     })
     .catch(err => {
       console.error("Failed to create locale:", err);
@@ -80,43 +76,24 @@ export default function LocaleManager() {
         </Link>
         <div className="flex justify-between items-center mt-2">
           <h1 className="text-3xl font-bold">Locale Manager</h1>
-          {/* Create New Locale Button and Dialog */}
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>Create New Locale</Button>
-            </DialogTrigger>
+            <DialogTrigger asChild><Button>Create New Locale</Button></DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
                 <DialogTitle className="text-xl">Create Locale</DialogTitle>
-                <DialogDescription className="text-base">
-                  Add a new locale to this variant group.
-                </DialogDescription>
+                <DialogDescription className="text-base">Add a new locale to this variant group.</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="name" className="text-right">Name</Label>
-                  <Input
-                    id="name"
-                    value={newLocaleName}
-                    onChange={(e) => setNewLocaleName(e.target.value)}
-                    className="col-span-3"
-                    placeholder="e.g., mr-IN"
-                  />
+                  <Input id="name" value={newLocaleName} onChange={(e) => setNewLocaleName(e.target.value)} className="col-span-3" placeholder="e.g., mr-IN"/>
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="fallback" className="text-right">Fallback ID</Label>
-                  <Input
-                    id="fallback"
-                    value={fallbackId}
-                    onChange={(e) => setFallbackId(e.target.value)}
-                    className="col-span-3"
-                    placeholder="Optional: ID of another locale"
-                  />
+                  <Input id="fallback" value={fallbackId} onChange={(e) => setFallbackId(e.target.value)} className="col-span-3" placeholder="Optional: ID of another locale"/>
                 </div>
               </div>
-              <DialogFooter>
-                <Button type="submit" onClick={handleCreateLocale}>Save Locale</Button>
-              </DialogFooter>
+              <DialogFooter><Button type="submit" onClick={handleCreateLocale}>Save Locale</Button></DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
@@ -134,17 +111,11 @@ export default function LocaleManager() {
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow>
-                <TableCell colSpan="3" className="text-center h-24">Loading...</TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan="3" className="text-center h-24">Loading...</TableCell></TableRow>
             ) : error ? (
-              <TableRow>
-                <TableCell colSpan="3" className="text-center h-24 text-red-500">{error}</TableCell>
-              </TableRow>
+              <TableRow><TableCell colSpan="3" className="text-center h-24 text-red-500">{error}</TableCell></TableRow>
             ) : locales.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan="3" className="text-center h-24">No locales found for this group. Create one to get started!</TableCell>
-                </TableRow>
+                <TableRow><TableCell colSpan="3" className="text-center h-24">No locales found for this group.</TableCell></TableRow>
             ) : (
               locales.map((locale) => (
                 <TableRow key={locale.id}>

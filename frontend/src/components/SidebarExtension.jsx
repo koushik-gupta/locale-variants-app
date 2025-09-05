@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+// No more axios import
 import ContentstackSDK from '@contentstack/ui-extensions-sdk';
 import { Badge } from "@/components/ui/badge";
+
+// --- The Fix: We hardcode the URL here ---
+const API_BASE_URL = "https://locale-variants-app-production.up.railway.app";
 
 export default function SidebarExtension() {
   const [statuses, setStatuses] = useState([]);
@@ -9,20 +12,24 @@ export default function SidebarExtension() {
 
   useEffect(() => {
     ContentstackSDK.init().then((sdk) => {
-      // This SDK object allows us to talk to Contentstack
       const entry = sdk.entry;
       const contentType = sdk.contentType.uid;
       
-      // For the demo, we will hardcode the Variant Group ID to '1'.
-      // A full application would have a settings page for this.
+      // For the demo, we hardcode the Variant Group ID to '1'.
       const variantGroupId = 1;
 
-      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/translations/${variantGroupId}/${entry.uid}?contentType=${contentType}`;
+      const apiUrl = `${API_BASE_URL}/api/translations/${variantGroupId}/${entry.uid}?contentType=${contentType}`;
 
-      // Call our own backend API
-      axios.get(apiUrl)
-        .then(res => {
-          setStatuses(res.data);
+      // Call our own backend API using fetch
+      fetch(apiUrl)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`Network response was not ok. Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          setStatuses(data);
         })
         .catch(err => console.error("Failed to get translation statuses", err))
         .finally(() => setIsLoading(false));
