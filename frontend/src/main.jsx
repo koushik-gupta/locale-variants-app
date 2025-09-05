@@ -3,25 +3,29 @@ import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.jsx';
 import Dashboard from './pages/Dashboard.jsx';
-import LocaleManager from './pages/LocaleManager.jsx'; // Import our new page
+import LocaleManager from './pages/LocaleManager.jsx';
+import SidebarExtension from './components/SidebarExtension.jsx'; // <-- IMPORT THIS
 import './index.css';
 
-// Here we define all the possible routes (pages) for our application
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
-    // These are "child" routes that will render inside the App component
     children: [
       {
-        index: true, // This makes the Dashboard the default page for "/"
+        index: true,
         element: <Dashboard />,
       },
       {
-        path: "group/:groupId", // This is the new page for a specific group
+        path: "group/:groupId",
         element: <LocaleManager />,
       },
     ]
+  },
+  // ADD THIS NEW ROUTE FOR THE SIDEBAR
+  {
+    path: "/sidebar",
+    element: <SidebarExtension />,
   },
 ]);
 
