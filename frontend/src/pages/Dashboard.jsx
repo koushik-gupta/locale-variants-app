@@ -60,7 +60,7 @@ export default function Dashboard() {
     // The JSX for the UI remains the same
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold">Variant Manager</h1>
+        <h1 className="text-3xl font-bold">Variant Manager!!</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild><Button>Create New Group</Button></DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
