@@ -50,8 +50,23 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchVariantGroups();
-  }, []);
+    // --- THIS IS THE DEBUG LINE ---
+    console.log("Checking Environment Variable -> VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
+    // ----------------------------
+
+    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/variants`;
+
+    axios.get(apiUrl)
+      .then(res => {
+        setVariantGroups(res.data);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch variant groups:", err);
+        setError("Failed to load data. Please check the console for details.");
+        setIsLoading(false);
+      });
+    }, []);
 
   const handleCreateGroup = () => {
     const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/variants`;
