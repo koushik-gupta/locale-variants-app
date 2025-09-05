@@ -70,7 +70,7 @@ export default function Dashboard() {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold">Variant Manager</h1>
+        <h1 className="text-3xl font-bold">Variant Manager!</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button>Create New Group</Button>
