@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // This now correctly points to your LOCAL backend for testing
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://locale-variants-app-production.up.railway.app";
 
 export default function Dashboard() {
   const [variantGroups, setVariantGroups] = useState([]);
