@@ -1,69 +1,63 @@
 import React, { useEffect, useState } from 'react';
-// No more axios import
 import ContentstackSDK from '@contentstack/ui-extensions-sdk';
 import { Badge } from "@/components/ui/badge";
 
-// --- The Fix: We hardcode the URL here ---
 const API_BASE_URL = "https://locale-variants-app-production.up.railway.app";
 
 export default function SidebarExtension() {
   const [statuses, setStatuses] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // New state to hold our debug messages
+  const [debugInfo, setDebugInfo] = useState({
+    step: 'Initializing...',
+    url: '',
+    error: '',
+    data: null
+  });
 
   useEffect(() => {
-    ContentstackSDK.init().then((sdk) => {
-      const entry = sdk.entry;
-      const contentType = sdk.contentType.uid;
-      
-      // For the demo, we hardcode the Variant Group ID to '1'.
-      const variantGroupId = 1;
+    ContentstackSDK.init()
+      .then((sdk) => {
+        setDebugInfo(prev => ({ ...prev, step: 'SDK Initialized. Getting entry data.' }));
+        const entry = sdk.entry;
+        const contentType = sdk.contentType.uid;
+        const variantGroupId = 1; // We are hardcoding this
 
-      const apiUrl = `${API_BASE_URL}/api/translations/${variantGroupId}/${entry.uid}?contentType=${contentType}`;
+        const apiUrl = `${API_BASE_URL}/api/translations/${variantGroupId}/${entry.uid}?contentType=${contentType}`;
+        setDebugInfo(prev => ({ ...prev, step: 'Making API call...', url: apiUrl }));
 
-      // Call our own backend API using fetch
-      fetch(apiUrl)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`Network response was not ok. Status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          setStatuses(data);
-        })
-        .catch(err => console.error("Failed to get translation statuses", err))
-        .finally(() => setIsLoading(false));
-    });
+        return fetch(apiUrl);
+      })
+      .then(async response => {
+        setDebugInfo(prev => ({ ...prev, step: `API response received with status: ${response.status}` }));
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(`API returned ${response.status}. Body: ${errorText}`);
+        }
+        return response.json();
+      })
+      .then(data => {
+        setDebugInfo(prev => ({ ...prev, step: 'Success! Fetched data.', data: data }));
+        setStatuses(data);
+      })
+      .catch(err => {
+        console.error("Error in Sidebar:", err);
+        setDebugInfo(prev => ({ ...prev, step: 'An error occurred.', error: err.message }));
+      });
   }, []);
 
-
+  // This component will now render a detailed debug view
   return (
-    <div className="p-4 border rounded-lg bg-card text-card-foreground shadow-sm">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold">Locale Variants</h3>
-        <p className="text-sm text-muted-foreground">
-          Translation status for this entry.
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        {isLoading ? (
-          <p>Loading status...</p>
-        ) : (
-          statuses.map((locale) => (
-            <div key={locale.id} className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">{locale.name}</p>
-              </div>
-              <Badge 
-                variant={locale.status === 'Translated' ? 'default' : 'secondary'}
-              >
-                {locale.status}
-              </Badge>
-            </div>
-          ))
-        )}
-      </div>
+    <div className="p-4 text-xs font-mono">
+      <h3 className="font-bold mb-2 underline">Debug Information</h3>
+      <p><span className="font-semibold">Step:</span> {debugInfo.step}</p>
+      {debugInfo.url && <p className="mt-2"><span className="font-semibold">API URL Called:</span> <code className="break-all">{debugInfo.url}</code></p>}
+      {debugInfo.error && <p className="mt-2 text-red-500"><span className="font-semibold">Error Message:</span> {debugInfo.error}</p>}
+      {debugInfo.data && (
+        <div className="mt-4">
+          <p className="font-semibold">Data Received:</p>
+          <pre className="text-xs bg-muted p-2 rounded">{JSON.stringify(debugInfo.data, null, 2)}</pre>
+        </div>
+      )}
     </div>
   );
 }
