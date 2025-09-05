@@ -6,9 +6,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Add the new line for variants
+// --- NEW DEBUG MIDDLEWARE ---
+// This will run for EVERY request and log its method and URL
+app.use((req, res, next) => {
+  console.log(`[Logger]: Received request: ${req.method} ${req.originalUrl}`);
+  next(); // Continue to the next route
+});
+// --------------------------
+
 app.use("/api/locales", require("./routes/locales"));
-app.use("/api/variants", require("./routes/variants")); // This is the new line [cite: 98]
+app.use("/api/variants", require("./routes/variants"));
 app.use("/api/translations", require("./routes/translations"));
 
 const PORT = process.env.PORT || 5000;
