@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom'; // <-- NEW: Import Link for navigation
+import { Link } from 'react-router-dom';
 
 // Import the UI components
 import { Button } from "@/components/ui/button";
@@ -33,9 +33,14 @@ export default function Dashboard() {
   const [newGroupName, setNewGroupName] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // This is now the single source for fetching data
   const fetchVariantGroups = () => {
-    setIsLoading(true);
+    // Log the variable to be 100% sure
+    console.log("Using API Base URL:", import.meta.env.VITE_API_BASE_URL);
+    
     const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/variants`;
+    
+    setIsLoading(true);
     axios.get(apiUrl)
       .then(res => {
         setVariantGroups(res.data);
@@ -49,24 +54,10 @@ export default function Dashboard() {
       });
   };
 
+  // The useEffect hook now simply calls our main fetch function
   useEffect(() => {
-    // --- THIS IS THE DEBUG LINE ---
-    console.log("Checking Environment Variable -> VITE_API_BASE_URL:", import.meta.env.VITE_API_BASE_URL);
-    // ----------------------------
-
-    const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/variants`;
-
-    axios.get(apiUrl)
-      .then(res => {
-        setVariantGroups(res.data);
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.error("Failed to fetch variant groups:", err);
-        setError("Failed to load data. Please check the console for details.");
-        setIsLoading(false);
-      });
-    }, []);
+    fetchVariantGroups();
+  }, []);
 
   const handleCreateGroup = () => {
     const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/variants`;
@@ -74,7 +65,7 @@ export default function Dashboard() {
       .then(res => {
         setIsDialogOpen(false);
         setNewGroupName("");
-        fetchVariantGroups();
+        fetchVariantGroups(); // Re-fetch after creating
       })
       .catch(err => {
         console.error("Failed to create variant group:", err);
@@ -99,9 +90,7 @@ export default function Dashboard() {
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
+                <Label htmlFor="name" className="text-right">Name</Label>
                 <Input
                   id="name"
                   value={newGroupName}
@@ -138,19 +127,15 @@ export default function Dashboard() {
                 <TableCell colSpan="3" className="text-center h-24 text-red-500">{error}</TableCell>
               </TableRow>
             ) : variantGroups.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan="3" className="text-center h-24">No variant groups found. Create one to get started!</TableCell>
-                </TableRow>
+              <TableRow>
+                <TableCell colSpan="3" className="text-center h-24">No variant groups found. Create one to get started!</TableCell>
+              </TableRow>
             ) : (
               variantGroups.map((group) => (
                 <TableRow key={group.id}>
                   <TableCell className="font-medium">{group.id}</TableCell>
-                  {/* 👇 NEW: This now a clickable link */}
                   <TableCell>
-                    <Link 
-                      to={`/group/${group.id}`} 
-                      className="font-medium text-primary underline-offset-4 hover:underline"
-                    >
+                    <Link to={`/group/${group.id}`} className="font-medium text-primary underline-offset-4 hover:underline">
                       {group.name}
                     </Link>
                   </TableCell>
