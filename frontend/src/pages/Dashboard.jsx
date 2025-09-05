@@ -1,22 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import * as contentstack from '@contentstack/management';
-
-// Import UI Components
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-// --- FINAL CORRECTED INITIALIZATION ---
-// The API key must be provided when the client is created to access all features.
-const client = contentstack.client({
-  host: "eu-app.contentstack.com",
-  api_key: import.meta.env.VITE_CONTENTSTACK_API_KEY, // <-- This was the missing piece
-  management_token: import.meta.env.VITE_CONTENTSTACK_MANAGEMENT_TOKEN,
-});
-// ------------------------------------
+// This now correctly points to your LOCAL backend for testing
+const API_BASE_URL = "http://localhost:5000";
 
 export default function Dashboard() {
   const [variantGroups, setVariantGroups] = useState([]);
@@ -27,14 +18,15 @@ export default function Dashboard() {
 
   const fetchVariantGroups = () => {
     setIsLoading(true);
-    // CORRECTED METHOD: Use .query().find() to get all items
-    client.personalize.variant().query().find()
-      .then((response) => {
-        setVariantGroups(response.items);
+    fetch(`${API_BASE_URL}/api/variants`)
+      .then(response => {
+        if (!response.ok) throw new Error(`Network response was not ok`);
+        return response.json();
       })
-      .catch((err) => {
-        console.error("Failed to fetch variants from Contentstack:", err);
-        setError("Failed to load data from Contentstack.");
+      .then(data => setVariantGroups(data))
+      .catch(err => {
+        console.error("Failed to fetch variant groups:", err);
+        setError("Failed to load data. Please check the console for details.");
       })
       .finally(() => setIsLoading(false));
   };
@@ -44,23 +36,28 @@ export default function Dashboard() {
   }, []);
 
   const handleCreateGroup = () => {
-    const variantData = {
-      name: newGroupName,
-    };
-    // The .create() method is correct, but was failing due to bad initialization
-    client.personalize.variant().create({ variant: variantData })
-      .then(() => {
-        setIsDialogOpen(false);
-        setNewGroupName("");
-        fetchVariantGroups();
-      })
-      .catch((err) => {
-        console.error("Failed to create variant in Contentstack:", err);
-        alert("Failed to create group. See console for details.");
-      });
+    fetch(`${API_BASE_URL}/api/variants`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newGroupName }),
+    })
+    .then(response => {
+      if (!response.ok) throw new Error(`Network response was not ok`);
+      return response.json();
+    })
+    .then(() => {
+      setIsDialogOpen(false);
+      setNewGroupName("");
+      fetchVariantGroups();
+    })
+    .catch(err => {
+      console.error("Failed to create variant group:", err);
+      alert("Failed to create group. See console for details.");
+    });
   };
 
   return (
+    // The JSX for the UI remains the same
     <div className="p-8 max-w-4xl mx-auto">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">Variant Manager</h1>
@@ -69,7 +66,7 @@ export default function Dashboard() {
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="text-xl">Create Variant Group</DialogTitle>
-              <DialogDescription className="text-base">This will create a new Variant in Contentstack Personalize.</DialogDescription>
+              <DialogDescription className="text-base">This will create a new Variant in Contentstack.</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
