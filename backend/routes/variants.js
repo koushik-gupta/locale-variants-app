@@ -16,80 +16,61 @@ const axiosClient = axios.create({
   }
 });
 
-// GET all variants
+// GET all variant groups
 router.get('/', async (req, res) => {
   try {
-    // CORRECT PATH: /variants
-    const response = await axiosClient.get('/variants');
-    res.json(response.data.variants || []);
+    const response = await axiosClient.get('/variant_groups');
+    res.json(response.data.variant_groups || []);
   } catch (err) {
-    console.error('GET /variants error:', err.response?.data || err.message);
-    res.status(err.response?.status || 500).json({ error: 'Failed to fetch variants' });
+    console.error('GET /variant_groups error:', err.response?.data || err.message);
+    res.status(err.response?.status || 500).json({ error: 'Failed to fetch variant groups' });
   }
 });
 
-// POST create a new variant
+// POST create a new variant group
 router.post('/', async (req, res) => {
   const { name } = req.body;
   if (!name) {
     return res.status(400).json({ error: 'Missing "name" in body' });
   }
-
   try {
+    // Use the 'variant_group' payload structure
     const payload = {
-      variant: {
-        name,
-        scope: {
-          locales: [] // Start with an empty locales array
-        }
+      variant_group: {
+        name
       }
     };
     console.log('[Debug] Sending payload to Contentstack:', JSON.stringify(payload));
-    
-    // CORRECT PATH: /variants
-    const response = await axiosClient.post('/variants', payload);
-    res.status(201).json(response.data.variant);
-
+    const response = await axiosClient.post('/variant_groups', payload);
+    res.status(201).json(response.data.variant_group);
   } catch (err) {
-    console.error('POST /variants error:', err.response?.data || err.message);
-    res.status(err.response?.status || 500).json({ error: 'Failed to create variant', detail: err.response?.data });
+    console.error('POST /variant_groups error:', err.response?.data || err.message);
+    res.status(err.response?.status || 500).json({ error: 'Failed to create variant group', detail: err.response?.data });
   }
 });
 
-// PUT update a variant (to add locale rules)
+// PUT update a variant group (to add locale rules to metadata)
 router.put('/:uid', async (req, res) => {
   const { uid } = req.params;
-  const { locales } = req.body; // Expecting an array like [{ code: 'mr-in', name: 'Marathi', fallback_locale: 'hi-in' }]
-
+  const { locales } = req.body;
   if (!locales) {
     return res.status(400).json({ error: 'Request body must include a "locales" array.' });
   }
-
   try {
-    // To update, we must first FETCH the existing variant to get its current state
-    // CORRECT PATH: /variants/:uid
-    const existingVariantResponse = await axiosClient.get(`/variants/${uid}`);
-    const existingVariant = existingVariantResponse.data.variant;
-
-    // Now, construct the update payload
+    // Use the 'variant_group' payload with 'metadata'
     const payload = {
-      variant: {
-        name: existingVariant.name, // Name is required on update
-        scope: {
-          ...existingVariant.scope, // Preserve existing scope properties
-          locales: locales // Overwrite with the new locales array
+      variant_group: {
+        metadata: {
+          locales: locales
         }
       }
     };
-
-    console.log(`[Debug] PUT /variants/${uid} payload:`, JSON.stringify(payload));
-    // CORRECT PATH: /variants/:uid
-    const response = await axiosClient.put(`/variants/${uid}`, payload);
-    res.json(response.data.variant);
-
+    console.log(`[Debug] PUT /variant_groups/${uid} payload:`, JSON.stringify(payload));
+    const response = await axiosClient.put(`/variant_groups/${uid}`, payload);
+    res.json(response.data.variant_group);
   } catch (err) {
-    console.error(`PUT /variants/${uid} error:`, err.response?.data || err.message);
-    res.status(err.response?.status || 500).json({ error: 'Failed to update variant', detail: err.response?.data });
+    console.error(`PUT /variant_groups/${uid} error:`, err.response?.data || err.message);
+    res.status(err.response?.status || 500).json({ error: 'Failed to update variant group', detail: err.response?.data });
   }
 });
 
