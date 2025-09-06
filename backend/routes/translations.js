@@ -9,13 +9,13 @@ const MANAGEMENT_TOKEN = process.env.CONTENTSTACK_MANAGEMENT_TOKEN;
 const DELIVERY_TOKEN = process.env.CONTENTSTACK_DELIVERY_TOKEN;
 const ENVIRONMENT = process.env.CONTENTSTACK_ENVIRONMENT;
 
-// CORRECT: Use the Personalize API host to get variant rules
-const PERSONALIZE_API_HOST = 'https://eu-api.contentstack.com/v3';
+// This client will now get variant rules from the main Management API host
+const MGMT_API_HOST = 'https://eu-api.contentstack.com/v3';
 const DLV_API_HOST = "https://eu-cdn.contentstack.com/v3";
 
-// Axios client for Personalize API (to get locale rules)
-const personalizeClient = axios.create({
-  baseURL: PERSONALIZE_API_HOST,
+// Axios client for Management API (which includes variants)
+const managementClient = axios.create({
+  baseURL: MGMT_API_HOST,
   headers: {
     'api_key': API_KEY,
     'authorization': MANAGEMENT_TOKEN
@@ -40,8 +40,9 @@ router.get("/status", async (req, res) => {
   }
 
   try {
-    // Step 1: Get the variant rules from the Personalize API
-    const variantResponse = await personalizeClient.get(`/personalize/variants/${variantUid}`);
+    // Step 1: Get the variant rules from the Management API
+    // CORRECT PATH: /variants/:uid
+    const variantResponse = await managementClient.get(`/variants/${variantUid}`);
     const localeRules = variantResponse.data.variant.scope.locales; // e.g., [{ code: 'mr-IN', name: 'Marathi'}]
     
     // If there are no rules, there's nothing to check

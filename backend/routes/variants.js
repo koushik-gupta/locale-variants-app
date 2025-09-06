@@ -5,7 +5,6 @@ const axios = require('axios');
 
 const API_KEY = process.env.CONTENTSTACK_API_KEY;
 const MANAGEMENT_TOKEN = process.env.CONTENTSTACK_MANAGEMENT_TOKEN;
-// CORRECT: Use the Personalize API host for your region (EU)
 const API_HOST = 'https://eu-api.contentstack.com/v3';
 
 const axiosClient = axios.create({
@@ -20,11 +19,11 @@ const axiosClient = axios.create({
 // GET all variants
 router.get('/', async (req, res) => {
   try {
-    // CORRECT: Use the /personalize/variants endpoint
-    const response = await axiosClient.get('/personalize/variants');
+    // CORRECT PATH: /variants
+    const response = await axiosClient.get('/variants');
     res.json(response.data.variants || []);
   } catch (err) {
-    console.error('GET /personalize/variants error:', err.response?.data || err.message);
+    console.error('GET /variants error:', err.response?.data || err.message);
     res.status(err.response?.status || 500).json({ error: 'Failed to fetch variants' });
   }
 });
@@ -37,7 +36,6 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    // CORRECT: Use the required payload structure with "scope"
     const payload = {
       variant: {
         name,
@@ -48,12 +46,12 @@ router.post('/', async (req, res) => {
     };
     console.log('[Debug] Sending payload to Contentstack:', JSON.stringify(payload));
     
-    // CORRECT: Use the /personalize/variants endpoint
-    const response = await axiosClient.post('/personalize/variants', payload);
+    // CORRECT PATH: /variants
+    const response = await axiosClient.post('/variants', payload);
     res.status(201).json(response.data.variant);
 
   } catch (err) {
-    console.error('POST /personalize/variants error:', err.response?.data || err.message);
+    console.error('POST /variants error:', err.response?.data || err.message);
     res.status(err.response?.status || 500).json({ error: 'Failed to create variant', detail: err.response?.data });
   }
 });
@@ -61,7 +59,7 @@ router.post('/', async (req, res) => {
 // PUT update a variant (to add locale rules)
 router.put('/:uid', async (req, res) => {
   const { uid } = req.params;
-  const { locales } = req.body; // Expecting an array like [{ code: 'mr-in', fallback: 'hi-in' }]
+  const { locales } = req.body; // Expecting an array like [{ code: 'mr-in', name: 'Marathi', fallback_locale: 'hi-in' }]
 
   if (!locales) {
     return res.status(400).json({ error: 'Request body must include a "locales" array.' });
@@ -69,7 +67,8 @@ router.put('/:uid', async (req, res) => {
 
   try {
     // To update, we must first FETCH the existing variant to get its current state
-    const existingVariantResponse = await axiosClient.get(`/personalize/variants/${uid}`);
+    // CORRECT PATH: /variants/:uid
+    const existingVariantResponse = await axiosClient.get(`/variants/${uid}`);
     const existingVariant = existingVariantResponse.data.variant;
 
     // Now, construct the update payload
@@ -83,12 +82,13 @@ router.put('/:uid', async (req, res) => {
       }
     };
 
-    console.log(`[Debug] PUT /personalize/variants/${uid} payload:`, JSON.stringify(payload));
-    const response = await axiosClient.put(`/personalize/variants/${uid}`, payload);
+    console.log(`[Debug] PUT /variants/${uid} payload:`, JSON.stringify(payload));
+    // CORRECT PATH: /variants/:uid
+    const response = await axiosClient.put(`/variants/${uid}`, payload);
     res.json(response.data.variant);
 
   } catch (err) {
-    console.error(`PUT /personalize/variants/${uid} error:`, err.response?.data || err.message);
+    console.error(`PUT /variants/${uid} error:`, err.response?.data || err.message);
     res.status(err.response?.status || 500).json({ error: 'Failed to update variant', detail: err.response?.data });
   }
 });
