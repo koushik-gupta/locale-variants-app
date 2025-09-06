@@ -6,7 +6,7 @@ const axios = require('axios');
 const API_KEY = process.env.CONTENTSTACK_API_KEY;
 const MANAGEMENT_TOKEN = process.env.CONTENTSTACK_MANAGEMENT_TOKEN;
 // CORRECT: Use the Personalize API host for your region (EU)
-const API_HOST = 'https://eu-personalize.contentstack.com/v3';
+const API_HOST = 'https://personalize.eu-regions.contentstack.com/v3';
 
 const axiosClient = axios.create({
   baseURL: API_HOST,
