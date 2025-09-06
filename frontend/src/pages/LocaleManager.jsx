@@ -12,6 +12,7 @@ const API_BASE_URL = "https://locale-variants-app-production.up.railway.app";
 
 export default function LocaleManager() {
   const { groupId } = useParams();
+  const [variantGroup, setVariantGroup] = useState(null); // Store the whole group
   const [locales, setLocales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -31,7 +32,9 @@ export default function LocaleManager() {
         return res.json();
       })
       .then(data => {
-        setLocales(data.scope?.locales || []);
+        setVariantGroup(data);
+        // CORRECT: Read locales from the 'metadata' property
+        setLocales(data.metadata?.locales || []);
         setError(null);
       })
       .catch(err => {
@@ -57,7 +60,7 @@ export default function LocaleManager() {
       {
         code: newLocaleCode,
         name: newLocaleName,
-        fallback_locale: fallbackCode || newLocaleCode
+        fallback_locale: fallbackCode || null // Use null if no fallback
       }
     ];
 
@@ -71,7 +74,8 @@ export default function LocaleManager() {
       return res.json();
     })
     .then(() => {
-      setLocales(updatedLocales);
+      // Refetch data from the server to ensure consistency
+      fetchLocales();
       setIsDialogOpen(false);
       setNewLocaleCode('');
       setNewLocaleName('');
@@ -90,14 +94,16 @@ export default function LocaleManager() {
           &larr; Back to Variant Groups
         </Link>
         <div className="flex justify-between items-center mt-2">
-          <h1 className="text-3xl font-bold">Locale Manager</h1>
+          <h1 className="text-3xl font-bold">
+            Locale Manager for <span className="text-primary">{variantGroup?.name}</span>
+          </h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild><Button>Create New Locale</Button></DialogTrigger>
+            <DialogTrigger asChild><Button>Add New Locale</Button></DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
               <DialogHeader>
-                <DialogTitle className="text-xl">Create Locale</DialogTitle>
+                <DialogTitle className="text-xl">Add Locale</DialogTitle>
                 <DialogDescription className="text-base">
-                  Add a new locale to this variant group.
+                  Add a new locale and its fallback rule to this variant group.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -124,7 +130,7 @@ export default function LocaleManager() {
 
       <div className="border rounded-lg">
         <Table>
-          <TableCaption>List of locales in this variant group</TableCaption>
+          <TableCaption>List of locale fallback rules for this variant group.</TableCaption>
           <TableHeader>
             <TableRow>
               <TableHead className="w-[100px]">Code</TableHead>
@@ -138,7 +144,7 @@ export default function LocaleManager() {
             ) : error ? (
               <TableRow><TableCell colSpan="3" className="text-center h-24 text-red-500">{error}</TableCell></TableRow>
             ) : locales.length === 0 ? (
-              <TableRow><TableCell colSpan="3" className="text-center h-24">No locales found for this group.</TableCell></TableRow>
+              <TableRow><TableCell colSpan="3" className="text-center h-24">No locales defined. Click "Add New Locale" to begin.</TableCell></TableRow>
             ) : (
               locales.map(locale => (
                 <TableRow key={locale.code}>
