@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import App from './App.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import LocaleManager from './pages/LocaleManager.jsx';
-import SidebarExtension from './components/SidebarExtension.jsx'; // <-- IMPORT THIS
+import SidebarExtension from './components/SidebarExtension.jsx';
 import './index.css';
 
 const router = createBrowserRouter([
@@ -17,12 +17,12 @@ const router = createBrowserRouter([
         element: <Dashboard />,
       },
       {
-        path: "group/:groupId",
+        // This path now correctly matches the links from the dashboard
+        path: "manage/:groupId", 
         element: <LocaleManager />,
       },
     ]
   },
-  // ADD THIS NEW ROUTE FOR THE SIDEBAR
   {
     path: "/sidebar",
     element: <SidebarExtension />,
