@@ -10,7 +10,7 @@ const DELIVERY_TOKEN = process.env.CONTENTSTACK_DELIVERY_TOKEN;
 const ENVIRONMENT = process.env.CONTENTSTACK_ENVIRONMENT;
 
 // CORRECT: Use the Personalize API host to get variant rules
-const PERSONALIZE_API_HOST = 'https://eu-personalize.contentstack.com/v3';
+const PERSONALIZE_API_HOST = 'https://eu-api.contentstack.com/v3';
 const DLV_API_HOST = "https://eu-cdn.contentstack.com/v3";
 
 // Axios client for Personalize API (to get locale rules)
