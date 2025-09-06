@@ -25,17 +25,28 @@ router.get("/", async (req, res) => {
   }
 });
 
+// POST endpoint to create a new variant
 router.post("/", async (req, res) => {
   const { name } = req.body;
-  if (!name) return res.status(400).json({ error: "Variant name is required." });
+  if (!name) {
+    return res.status(400).json({ error: "Variant name is required." });
+  }
 
   try {
-    const payload = { variant: { name } };
+    // --- THIS IS THE FIX ---
+    // The payload for creating a variant needs to be wrapped in a "variant" object.
+    const payload = {
+      variant: {
+        name: name
+      }
+    };
+    // --------------------
     const response = await axiosClient.post('/variants', payload);
     res.status(201).json(response.data.variant);
   } catch (err) {
-    console.error("Contentstack API Error:", err.response?.data);
-    res.status(500).json({ error: "Failed to create variant." });
+    // Log the detailed error from Contentstack's API
+    console.error("Contentstack API Error:", err.response?.data?.errors || err.message);
+    res.status(500).json({ error: "Failed to create variant in Contentstack." });
   }
 });
 
