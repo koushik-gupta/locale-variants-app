@@ -4,11 +4,9 @@ import { Badge } from "@/components/ui/badge";
 
 const API_BASE_URL = "https://locale-variants-app-production.up.railway.app";
 
-// --- IMPORTANT ---
-// PASTE THE UID OF YOUR VARIANT GROUP HERE.
-// You can find this on the main dashboard of your app. It starts with "cs...".
-const VARIANT_GROUP_UID = "PASTE_YOUR_UID_HERE"; 
-// For example: "cs05f4fa66358368ad"
+// --- FIX ---
+// The placeholder has been replaced with the UID from your dashboard screenshot.
+const VARIANT_GROUP_UID = "cs056f4a66358360ad"; 
 
 export default function SidebarExtension() {
   const [statuses, setStatuses] = useState([]);
@@ -21,7 +19,7 @@ export default function SidebarExtension() {
         const entry = sdk.entry;
         const contentType = sdk.contentType.uid;
         
-        // This check ensures you've replaced the placeholder UID
+        // This check ensures a valid UID is set before fetching.
         if (!VARIANT_GROUP_UID || VARIANT_GROUP_UID === "PASTE_YOUR_UID_HERE") {
             throw new Error("Variant Group UID is not set. Please edit SidebarExtension.jsx");
         }
