@@ -20,7 +20,7 @@ export default function SidebarExtension() {
         const contentType = sdk.contentType.uid;
         
         // This check ensures a valid UID is set before fetching.
-        if (!VARIANT_GROUP_UID || VARIANT_GROUP_UID === "PASTE_YOUR_UID_HERE") {
+        if (!VARIANT_GROUP_UID || VARIANT_GROUP_UID === "cs056f4a66358360ad") {
             throw new Error("Variant Group UID is not set. Please edit SidebarExtension.jsx");
         }
 
