@@ -18,6 +18,7 @@ const axiosClient = axios.create({
 
 // GET all variant groups
 router.get('/', async (req, res) => {
+  // This route is working, no changes needed.
   try {
     const response = await axiosClient.get('/variant_groups');
     res.json(response.data.variant_groups || []);
@@ -32,16 +33,26 @@ router.get('/', async (req, res) => {
 // GET a single variant group by UID
 router.get('/:uid', async (req, res) => {
   const { uid } = req.params;
+  console.log(`--- Starting GET /api/variants/${uid} ---`);
   try {
+    console.log(`[Step 1] Inside try block for ${uid}.`);
+    console.log('[Step 2] About to call Contentstack API...');
+
     const response = await axiosClient.get(`/variant_groups/${uid}`);
+
+    console.log('[Step 3] Successfully received response from Contentstack.');
     res.json(response.data.variant_group);
+    
   } catch (err) {
-    console.error(`GET /variant_groups/${uid} error:`, err.response?.data || { message: err.message });
+    console.error(`[CRITICAL ERROR] in GET /variant_groups/${uid}:`, err.response?.data || { message: err.message, code: err.code });
     const status = err.response?.status || 500;
-    const detail = err.response?.data || { message: `An unexpected error occurred while fetching ${uid}` };
+    const detail = err.response?.data || { message: `An unexpected error occurred: ${err.message}` };
     res.status(status).json({ error: `Failed to fetch variant group ${uid}`, detail });
   }
+  console.log(`--- Finished GET /api/variants/${uid} ---`);
 });
+
+// Other routes (POST, PUT) remain the same...
 
 // POST create a new variant group
 router.post('/', async (req, res) => {
