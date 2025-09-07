@@ -16,31 +16,28 @@ const axiosClient = axios.create({
   }
 });
 
-// GET all variant groups - This route is correct.
+// GET all variant groups
 router.get('/', async (req, res) => {
   try {
     const response = await axiosClient.get('/variant_groups');
     res.json(response.data.variant_groups || []);
   } catch (err) {
-    console.error('GET /variant_groups error:', err.response?.data || { message: err.message });
     res.status(err.response?.status || 500).json({ error: 'Failed to fetch variant groups' });
   }
 });
 
-// GET a single variant group by UID - This route is correct.
+// GET a single variant group by UID
 router.get('/:uid', async (req, res) => {
   const { uid } = req.params;
   try {
     const response = await axiosClient.get(`/variant_groups/${uid}`);
-    const variantGroupData = response.data.variant_group || response.data;
-    res.json(variantGroupData);
+    res.json(response.data.variant_group || response.data);
   } catch (err) {
-    console.error(`GET /variant_groups/${uid} error:`, err.response?.data || { message: err.message });
     res.status(err.response?.status || 500).json({ error: `Failed to fetch variant group ${uid}` });
   }
 });
 
-// POST route - This is correct, but will be blocked by Contentstack's API rules.
+// POST create a new variant group
 router.post('/', async (req, res) => {
   const { name } = req.body;
   if (!name) { return res.status(400).json({ error: 'Missing "name" in body' }); }
@@ -49,52 +46,46 @@ router.post('/', async (req, res) => {
     const response = await axiosClient.post('/variant_groups', payload);
     res.status(201).json(response.data.variant_group);
   } catch (err) {
-    console.error('POST /variant_groups error:', err.response?.data || { message: err.message });
     res.status(err.response?.status || 500).json({ error: 'Failed to create variant group' });
   }
 });
 
-// --- PUT Route with Enhanced Debugging ---
+
+// --- THIS IS THE FINAL, CORRECTED PUT ROUTE ---
 router.put('/:uid', async (req, res) => {
   const { uid } = req.params;
   const { locales } = req.body;
-  
-  console.log(`--- Starting PUT /api/variants/${uid} ---`);
-
   if (!locales) {
-    console.log('[ERROR] Request body was missing "locales" array.');
     return res.status(400).json({ error: 'Request body must include a "locales" array.' });
   }
-  
   try {
-    // Step 1: Fetch the existing group to get its current name
-    console.log(`[Step 1] Fetching existing group with UID: ${uid}`);
-    const existingGroupResponse = await axiosClient.get(`/variant_groups/${uid}`);
-    const existingGroup = existingGroupResponse.data.variant_group || existingGroupResponse.data;
-    console.log(`[Step 2] Successfully fetched group. Name is: "${existingGroup.name}"`);
+    // WORKAROUND: Fetch ALL groups to reliably get the name for the target group.
+    const allGroupsResponse = await axiosClient.get('/variant_groups');
+    const allGroups = allGroupsResponse.data.variant_groups || [];
+    const targetGroup = allGroups.find(group => group.uid === uid);
 
-    // Step 2: Construct a payload that includes the name and the new metadata
+    if (!targetGroup) {
+      return res.status(404).json({ error: `Variant group with UID ${uid} not found in the list.` });
+    }
+
+    // Now, construct the payload with the correct name.
     const payload = {
       variant_group: {
-        name: existingGroup.name, // Include the existing name
+        name: targetGroup.name, // Use the name from the reliable list endpoint
         metadata: {
           locales: locales
         }
       }
     };
     
-    console.log(`[Step 3] Sending this final payload to Contentstack: ${JSON.stringify(payload)}`);
     const response = await axiosClient.put(`/variant_groups/${uid}`, payload);
-    console.log('[Step 4] Successfully updated the group in Contentstack.');
     res.json(response.data.variant_group);
-
+    
   } catch (err) {
-    console.error(`[CRITICAL ERROR] in PUT /variant_groups/${uid}:`, err.response?.data || { message: err.message });
+    console.error(`PUT /variant_groups/${uid} error:`, err.response?.data || { message: err.message });
     const status = err.response?.status || 500;
     res.status(status).json({ error: 'Failed to update variant group' });
   }
-  
-  console.log(`--- Finished PUT /api/variants/${uid} ---`);
 });
 
 module.exports = router;
