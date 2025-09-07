@@ -21,7 +21,8 @@ export default function SidebarExtension() {
         const entry = sdk.entry;
         const contentType = sdk.contentType.uid;
         
-        if (!VARIANT_GROUP_UID || VARIANT_GROUP_UID === "cs05f4fa66358368ad") {
+        // This check ensures you've replaced the placeholder UID
+        if (!VARIANT_GROUP_UID || VARIANT_GROUP_UID === "PASTE_YOUR_UID_HERE") {
             throw new Error("Variant Group UID is not set. Please edit SidebarExtension.jsx");
         }
 

@@ -27,6 +27,21 @@ router.get('/', async (req, res) => {
   }
 });
 
+// --- ADDED THIS MISSING ROUTE ---
+// GET a single variant group by UID
+router.get('/:uid', async (req, res) => {
+  const { uid } = req.params;
+  try {
+    const response = await axiosClient.get(`/variant_groups/${uid}`);
+    res.json(response.data.variant_group);
+  } catch (err) {
+    // This is the error we expect to see from Contentstack
+    console.error(`GET /variant_groups/${uid} error:`, err.response?.data || err.message);
+    res.status(err.response?.status || 500).json({ error: `Failed to fetch variant group ${uid}`, detail: err.response?.data });
+  }
+});
+// --------------------------------
+
 // POST create a new variant group
 router.post('/', async (req, res) => {
   const { name } = req.body;
@@ -34,7 +49,6 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Missing "name" in body' });
   }
   try {
-    // Use the 'variant_group' payload structure
     const payload = {
       variant_group: {
         name
@@ -57,7 +71,6 @@ router.put('/:uid', async (req, res) => {
     return res.status(400).json({ error: 'Request body must include a "locales" array.' });
   }
   try {
-    // Use the 'variant_group' payload with 'metadata'
     const payload = {
       variant_group: {
         metadata: {
