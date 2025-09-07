@@ -29,19 +29,13 @@ router.get('/', async (req, res) => {
   }
 });
 
-// --- THIS IS THE UPDATED ROUTE ---
 // GET a single variant group by UID
 router.get('/:uid', async (req, res) => {
   const { uid } = req.params;
   try {
     const response = await axiosClient.get(`/variant_groups/${uid}`);
-    console.log('SUCCESS! Received data from Contentstack:', JSON.stringify(response.data, null, 2));
-    
-    // FINAL FIX: Handle the successful response correctly.
-    // The data might be in response.data.variant_group OR just in response.data.
     const variantGroupData = response.data.variant_group || response.data;
     res.json(variantGroupData);
-
   } catch (err) {
     console.error(`GET /variant_groups/${uid} error:`, err.response?.data || { message: err.message });
     const status = err.response?.status || 500;
@@ -50,12 +44,10 @@ router.get('/:uid', async (req, res) => {
   }
 });
 
-// POST create a new variant group
+// POST create a new variant group (This will be blocked by Contentstack but the code is correct)
 router.post('/', async (req, res) => {
   const { name } = req.body;
-  if (!name) {
-    return res.status(400).json({ error: 'Missing "name" in body' });
-  }
+  if (!name) { return res.status(400).json({ error: 'Missing "name" in body' }); }
   try {
     const payload = { variant_group: { name } };
     const response = await axiosClient.post('/variant_groups', payload);
@@ -68,7 +60,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT update a variant group
+// --- THIS IS THE UPDATED ROUTE ---
+// PUT update a variant group (to add locale rules to metadata)
 router.put('/:uid', async (req, res) => {
   const { uid } = req.params;
   const { locales } = req.body;
@@ -76,7 +69,21 @@ router.put('/:uid', async (req, res) => {
     return res.status(400).json({ error: 'Request body must include a "locales" array.' });
   }
   try {
-    const payload = { variant_group: { metadata: { locales: locales } } };
+    // Step 1: Fetch the existing group to get its current name
+    const existingGroupResponse = await axiosClient.get(`/variant_groups/${uid}`);
+    const existingGroup = existingGroupResponse.data.variant_group || existingGroupResponse.data;
+
+    // Step 2: Construct a payload that includes the name and the new metadata
+    const payload = {
+      variant_group: {
+        name: existingGroup.name, // Include the existing name
+        metadata: {
+          locales: locales
+        }
+      }
+    };
+    
+    console.log(`[Debug] PUT /variant_groups/${uid} payload:`, JSON.stringify(payload));
     const response = await axiosClient.put(`/variant_groups/${uid}`, payload);
     res.json(response.data.variant_group);
   } catch (err) {
