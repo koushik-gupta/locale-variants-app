@@ -20,8 +20,8 @@ export default function SidebarExtension() {
         const contentType = sdk.contentType.uid;
         
         // This check ensures a valid UID is set before fetching.
-        if (!VARIANT_GROUP_UID || VARIANT_GROUP_UID === "cs056f4a66358360ad") {
-            throw new Error("Variant Group UID is not set. Please edit SidebarExtension.jsx");
+        if (!VARIANT_GROUP_UID || VARIANT_GROUP_UID === "PASTE_YOUR_UID_HERE") {
+        throw new Error("Variant Group UID placeholder not replaced. Please edit SidebarExtension.jsx");
         }
 
         const apiUrl = `${API_BASE_URL}/api/translations/status?variantUid=${VARIANT_GROUP_UID}&entryUid=${entry.uid}&contentType=${contentType}`;
