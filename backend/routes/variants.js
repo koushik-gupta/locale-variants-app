@@ -37,7 +37,7 @@ router.get('/:uid', async (req, res) => {
   }
 });
 
-// POST create a new variant group
+// POST create a new variant group (Note: creation logic may differ based on account setup)
 router.post('/', async (req, res) => {
   const { name } = req.body;
   if (!name) { return res.status(400).json({ error: 'Missing "name" in body' }); }
@@ -51,7 +51,7 @@ router.post('/', async (req, res) => {
 });
 
 
-// --- THIS IS THE FINAL, CORRECTED PUT ROUTE ---
+// --- Update Variant Group with Locale Rules ---
 router.put('/:uid', async (req, res) => {
   const { uid } = req.params;
   const { locales } = req.body;
@@ -59,7 +59,8 @@ router.put('/:uid', async (req, res) => {
     return res.status(400).json({ error: 'Request body must include a "locales" array.' });
   }
   try {
-    // WORKAROUND: Fetch ALL groups to reliably get the name for the target group.
+    // WORKAROUND: Fetch details for the target group first.
+    // Note: If GET /variant_groups/:uid fails, use the GET all approach from before.
     const allGroupsResponse = await axiosClient.get('/variant_groups');
     const allGroups = allGroupsResponse.data.variant_groups || [];
     const targetGroup = allGroups.find(group => group.uid === uid);
@@ -68,19 +69,25 @@ router.put('/:uid', async (req, res) => {
       return res.status(404).json({ error: `Variant group with UID ${uid} not found in the list.` });
     }
 
-    // Now, construct the payload with the correct name.
+    // Construct the payload including all necessary fields to satisfy API validation.
     const payload = {
       variant_group: {
-        name: targetGroup.name, // Use the name from the reliable list endpoint
+        name: targetGroup.name, // Pass back existing name
+
+        // --- FIX: Add content_types to prevent validation error ---
+        // The error "Name or content types is required" suggests we pass back existing content types.
+        content_types: targetGroup.content_types || [],
+
+        // Add new locale metadata
         metadata: {
           locales: locales
         }
       }
     };
-    
+
     const response = await axiosClient.put(`/variant_groups/${uid}`, payload);
     res.json(response.data.variant_group);
-    
+
   } catch (err) {
     console.error(`PUT /variant_groups/${uid} error:`, err.response?.data || { message: err.message });
     const status = err.response?.status || 500;
